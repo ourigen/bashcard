@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -e 
+
+DECK="$1"
+
+HEADER=$'\033[1;30;47m'
+BLUEFG=$'\033[0;34m'
+REDFG=$'\033[0;31m'
+GREENFG=$'\033[0;32m'
+YELLOWFG=$'\033[0;33m'
+MAGENTAFG=$'\033[0;35m'
+CYANFG=$'\033[0;36m'
+FGRESET=$'\033[0m'
+POINTS=0
+TOTAL=0
+
+usage() {
+	printf "To start, use script on a deck with tab-separated entries.\n";
+	printf "    Usage: %bbashcard %b<deck-name>%b\n" "$GREENFG" "$YELLOWFG" "$FGRESET";
+	printf "To exit, press CTRL-c to exit.\n";
+	printf "See %bsample.deck%b for example.\n" "$REDFG" "$FGRESET";
+	exit
+}
+
+main(){
+	IFS=$'\t'
+	read -ra CARD <<< "$(shuf -n 1 "$DECK")"
+	printf "\n";
+	printf "%b BASHCARD %b\n" "$HEADER" "$FGRESET";
+	printf "%bCategory:%b %s\n" "$BLUEFG" "$FGRESET" "${CARD[0]}"
+	printf "%bQuestion:%b %s\n" "$BLUEFG" "$FGRESET" "${CARD[1]}"
+	read -rp "$BLUEFG""Answer?$FGRESET " ANSWER
+	[[ "$ANSWER" = "${CARD[2]}" ]] && 
+		printf "%bCorrect!%b\n" "$GREENFG" "$FGRESET" && POINTS=$(( POINTS + 1 )) || 
+		printf "%bIncorrect. The answer is:%b %s\n" "$REDFG" "$FGRESET" "${CARD[2]}"
+	TOTAL=$(( TOTAL + 1 ))
+}
+
+quit(){
+	printf "\n%bGood practice! You answered %s out of %s questions correct.%b\n" "$YELLOWFG" "$POINTS" "$TOTAL" "$FGRESET"
+	exit 0
+}
+
+[[ -z $1 ]] && usage
+
+[[ -z "$DEBUG" ]] &&
+	trap "quit" INT TERM
+	while true; do
+		main
+	done
